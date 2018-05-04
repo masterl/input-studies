@@ -1,6 +1,6 @@
 # Input studies
 
-Reading directly from cin might put global to error state, so reading the line and parsing later might be better on this regard.
+Reading directly from `cin` might put this global in an error state, so reading the line and parsing later might be better on this regard.
 Of course there are many ways of achieving this, this repository aim is to try different options.
 
 ## Dependencies
