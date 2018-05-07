@@ -131,6 +131,7 @@ We could also have a loop to keep asking for input on error, for example.
 ---
 
 ### Simple functions (no error check)
+
 We've seen that doing it in-place has more CONs overall, so now let's try isolating this code on functions:
 
 ```cpp
@@ -180,3 +181,68 @@ See the [full source here](simple-functions-no-ec/main.cpp).
 - **Some code duplication**<br>
   By using simple functions without the help of templates or anything, we need to declare one function for each type we need.<br>
   On the example, `read_integer` reads an `int`, but what if we need `short`? Or `double`? `long`? `unsigned`? `char`? And so on...
+
+  ---
+
+  ### Simple functions (with error checking)
+
+  Now we are able to determine if an input was successful or not without cluttering up too much our code:
+
+  ```cpp
+  bool read_line( std::string &line );
+  bool read_integer( int &value );
+
+  int main()
+  {
+      int number;
+      std::string user_input;
+
+      std::cout << "Input a number: ";
+
+      if( !read_integer( number ) )
+      {
+          std::cerr << "Oops, looks like you didn't type a number" << std::endl;
+
+          return -1;
+      }
+
+      std::cout << "\nYou typed [" << number << "]" << std::endl;
+
+      return 0;
+  }
+
+  // read_line and read_integer defined here
+  ```
+
+  See the [full source here](simple-functions-with-ec/main.cpp).
+
+#### PROs:
+
+- **not put global std::cin on a bad state**<br>
+  Imagine we tried `cin >> number;`, but the user provided a letter, cin would now be on a bad state.<br>
+  By extracting the line as a string, we avoid this situation.
+
+- **Less code duplication** (more on this on the CONs)<br>
+  If there is something wrong on the input handling, we don't need to scan all our code to fix it, there's a few places that we need to check.
+
+- **No scope pollution**<br>
+  At least regarding variables, we are not polluting the scope anymore.<br>
+  All variables are scoped to their respective functions.
+
+- **Less clutter**<br>
+  Now the input read part is just a function call which doesn't obfuscate the program logic.
+
+- **Error checking**<br>
+  Now we can check for errors on input and act accordingly.
+
+#### CONs:
+
+- **Some code duplication**<br>
+  By using simple functions without the help of templates or anything, we need to declare one function for each type we need.<br>
+  On the example, `read_integer` reads an `int`, but what if we need `short`? Or `double`? `long`? `unsigned`? `char`? And so on...
+
+##### Note:
+
+There are a lot of ways of providing error information to whoever called the function, including returning the error and the value instead of taking a reference, for example returning std::pair, std::tuple or some struct containing an error field and a value field, or even throwing exceptions.
+
+The point that it's made here is that we have the ability of checking the error and the input reading part of the code is isolated.
