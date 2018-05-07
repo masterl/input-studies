@@ -15,9 +15,7 @@ int main()
 
     input_stream >> number;
 
-    std::cout << "\n"
-                 "You typed ["
-              << number << "]" << std::endl;
+    std::cout << "\nYou typed [" << number << "]" << std::endl;
 
     return 0;
 }
