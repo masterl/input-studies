@@ -18,11 +18,32 @@ Of course there are many ways of achieving this, this repository aim is to try d
 - `with-ec` suffix means "with error check"
 
 ---
+
 ## Methods discussion
+
+---
 
 ### In-place (no error check)
 
-The first option was to do it in-place, as can be seen on [the source](in-place-no-ec/main.cpp).<br>
+The first option was to do it in-place:
+
+```cpp
+int number;
+std::string user_input;
+
+std::cout << "Input a number: ";
+
+std::getline( std::cin, user_input );
+
+std::istringstream input_stream( user_input );
+
+input_stream >> number;
+
+std::cout << "\nYou typed [" << number << "]" << std::endl;
+```
+
+See the [full source here](in-place-no-ec/main.cpp).
+
 Of course there are many ways of doing this, for example:
 - Create a new string and stream everytime we need input
 - Create a string and stream and carry them from start to bottom
@@ -30,6 +51,7 @@ Of course there are many ways of doing this, for example:
 Either way, the impacts are mostly bad.
 
 #### PROs:
+
 - **not put global std::cin on a bad state**<br>
   Imagine we tried `cin >> number;`, but the user provided a letter, cin would now be on a bad state.<br>
   By extracting the line as a string, we avoid this situation.
@@ -59,13 +81,37 @@ std::istringstream(input) >> number;
 This will not only have all the previously mentioned CONs, but now even if we decide to check for errors we wouldn't be able to, since we have no way of calling `.fail()` or any other state checking method on that stream.
 
 ---
+
 ### In-place (with error checking)
 
-Now we'll do it in-place again, but checking for error, as can be seen on [the source](in-place-with-ec/main.cpp).<br>
+Now we'll do it in-place again, but now checking for error:
+
+```cpp
+std::cout << "Input a number: ";
+
+std::getline( std::cin, user_input );
+
+std::istringstream input_stream( user_input );
+
+input_stream >> number;
+
+if( input_stream.fail() )
+{
+    std::cerr << "\nOops, [" << user_input << "] is not a number!" << std::endl;
+
+    return -1;
+}
+
+std::cout << "\nYou typed [" << number << "]" << std::endl;
+```
+
+See the [full source here](in-place-with-ec/main.cpp).
+
 The code provided is just an example of one of the possible approaches inside `main`, namely *"exiting upon error"*.<br>
 We could also have a loop to keep asking for input on error, for example.
 
 #### PROs:
+
 - **not put global std::cin on a bad state**<br>
   Imagine we tried `cin >> number;`, but the user provided a letter, cin would now be on a bad state.<br>
   By extracting the line as a string, we avoid this situation.
@@ -80,4 +126,57 @@ We could also have a loop to keep asking for input on error, for example.
 - **Scope pollution**<br>
   By doing it in-place we still need to expend two variable names, one for the input and one for the stream.
 - **Code clutter**<br>
-  Adding error checking makes the input receive part even bigger now, clouding the program specific code.
+  Adding error checking makes the input receive part even bigger now, clouding the program logic.
+
+---
+
+### Simple functions (no error check)
+We've seen that doing it in-place has more CONs overall, so now let's try isolating this code on functions:
+
+```cpp
+std::string read_line();
+int read_integer();
+
+int main()
+{
+    int number;
+    std::string user_input;
+
+    std::cout << "Input a number: ";
+
+    number = read_integer();
+
+    std::cout << "\nYou typed [" << number << "]" << std::endl;
+
+    return 0;
+}
+
+// read_line and read_integer defined here
+```
+
+See the [full source here](simple-functions-no-ec/main.cpp).
+
+#### PROs:
+
+- **not put global std::cin on a bad state**<br>
+  Imagine we tried `cin >> number;`, but the user provided a letter, cin would now be on a bad state.<br>
+  By extracting the line as a string, we avoid this situation.
+
+- **Less code duplication** (more on this on the CONs)<br>
+  If there is something wrong on the input handling, we don't need to scan all our code to fix it, there's a few places that we need to check.
+
+- **No scope pollution**<br>
+  At least regarding variables, we are not polluting the scope anymore.<br>
+  All variables are scoped to their respective functions.
+
+- **Less clutter**<br>
+  Now the input read part is just a function call which doesn't obfuscate the program logic.
+
+#### CONs:
+
+- **No error checking**<br>
+  Since we don't check for errors, this is obviously a concern.
+
+- **Some code duplication**<br>
+  By using simple functions without the help of templates or anything, we need to declare one function for each type we need.<br>
+  On the example, `read_integer` reads an `int`, but what if we need `short`? Or `double`? `long`? `unsigned`? `char`? And so on...
